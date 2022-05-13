@@ -2,7 +2,7 @@ package oxy.edhm.hackmud.requests;
 
 import org.pmw.tinylog.Logger;
 
-import static oxy.edhm.hackmud.APIHandler.*;
+import static oxy.edhm.hackmud.HMAPI.*;
 
 public class TELL implements Runnable {
     @SuppressWarnings("FieldMayBeFinal")

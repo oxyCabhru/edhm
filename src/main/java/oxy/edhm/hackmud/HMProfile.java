@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Map;
 
 public class HMProfile {
-    protected APIHandler api;
+    protected HMAPI api;
 
     public static String hmUser;
     public static ArrayList<String> channels;
@@ -12,7 +12,7 @@ public class HMProfile {
     public static long balance;
 
     public HMProfile() {
-        api = new APIHandler();
+        api = new HMAPI();
     }
 
 

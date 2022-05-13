@@ -3,7 +3,6 @@ package oxy.edhm.hackmud;
 import okhttp3.*;
 import org.pmw.tinylog.Logger;
 
-import java.awt.*;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Map;
@@ -15,39 +14,38 @@ import com.google.gson.Gson;
 
 import oxy.edhm.hackmud.requests.*;
 
-public class APIHandler {
+public class HMAPI {
     public static final OkHttpClient client = new OkHttpClient();                           // http handler
     public static final Gson gson = new Gson();                                             // json handler
     public static final MediaType JSON = MediaType.get("application/json; charset=utf-8");  // helper vars for http
-    public static final String hackmudURL = "www.hackmud.com/mobile/";                      //
+    public static final String hackmudURL = "https://www.hackmud.com/mobile/";              //
 
-    public static String token; public static String hmUser; public static String password; //
-    public static ArrayList<String> channels;                                               // variables for use with our threads
-    public static ArrayList<Map<String, String>> chats;                                     // this is where we hold info
-    protected ScheduledThreadPoolExecutor profileUpdater;                                   //manage our tasks with this
+    public static volatile String token; public static volatile String hmUser; public static volatile String password; //
+    public static volatile Map<String, ArrayList<String>> channelsAndMembers;                                               // variables for use with our threads
+    public static volatile ArrayList<Map<String, String>> chats;                                     // this is where we hold info
+    protected static ScheduledThreadPoolExecutor profileUpdater = (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(5);                                   //manage our tasks with this
 
-    public APIHandler() {
-        profileUpdater = (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(5); //thread manager for http requests
+    public HMAPI() {
+        Logger.info("Starting APIHandler, starting services:");
+        request("ACCOUNT_DATA");
+//        request("CHATS");
     }
 
-    public void request(String request) {
+    public static void request(String request) {
         switch (request) {
-            case "GET_TOKEN":
-                profileUpdater.execute(GET_TOKEN(password));
-                break;
-            case "ACCOUNT_DATA":
+            case "GET_TOKEN" -> profileUpdater.execute(GET_TOKEN(password));
+            case "ACCOUNT_DATA" -> {
                 Logger.info("Starting ACCOUNT_DATA service");
                 profileUpdater.scheduleWithFixedDelay(ACCOUNT_DATA(token), 0, 10, TimeUnit.SECONDS);
-                break;
-            case "CHATS":
+            }
+            case "CHATS" -> {
                 Logger.info("Starting CHATS service");
                 profileUpdater.scheduleWithFixedDelay(CHATS(token, hmUser), 0, 5, TimeUnit.SECONDS);
-                break;
-            default:
-                Logger.warn("Invalid request to API, did you use SEND or TELL? Add channel|target and a message.");
+            }
+            default -> Logger.warn("Invalid request to API, did you use SEND or TELL? Add channel|target and a message.");
         }
     }
-    public void request(String sendOrTell, String channelOrTarget, String message) {
+    public static void request(String sendOrTell, String channelOrTarget, String message) {
         switch (sendOrTell) {
             case "SEND":
                 profileUpdater.execute(SEND(token, hmUser, channelOrTarget, message));
@@ -62,7 +60,7 @@ public class APIHandler {
         profileUpdater.shutdown();
     }
 
-    public Runnable GET_TOKEN(String password) {
+    public static Runnable GET_TOKEN(String password) {
         String body = String.format("""
                 {
                     "pass":"%s"
@@ -70,7 +68,7 @@ public class APIHandler {
         return new GET_TOKEN(body);
     }
 
-    public Runnable ACCOUNT_DATA(String token) {
+    public static Runnable ACCOUNT_DATA(String token) {
         String body = String.format("""
                 {
                     "chat_token":"%s"
@@ -78,7 +76,7 @@ public class APIHandler {
         return new ACCOUNT_DATA(body);
     }
 
-    public Runnable CHATS(String token, String username) {
+    public static Runnable CHATS(String token, String username) {
         String body = String.format("""
             {
                 "chat_token":"%s",
@@ -88,7 +86,7 @@ public class APIHandler {
         return new CHATS(body);
     }
 
-    public Runnable SEND(String token, String username, String channel, String message) {
+    public static Runnable SEND(String token, String username, String channel, String message) {
         String body = String.format("""
                 {
                     "chat_token":"%s",
@@ -99,7 +97,7 @@ public class APIHandler {
         return new SEND(body);
     }
 
-    public Runnable TELL(String token, String username, String target, String message) {
+    public static Runnable TELL(String token, String username, String target, String message) {
         String body = String.format("""
                 {
                     "chat_token":"%s",
@@ -111,21 +109,23 @@ public class APIHandler {
     }
 
     @SuppressWarnings("ConstantConditions")
-    public static String POST(String URL, String json) {
+    public static String POST(String URL, String json) { //working!! do not TOUCH
         RequestBody body = RequestBody.create(json, JSON); //craft POST body
         Logger.info("Body: " + body);
         Request request = new Request.Builder()
                 .url(URL)
                 .addHeader("Content-Type", "application/json")
-                .post(body) //FIXME what the hell
+                .post(body)
                 .build(); //package POST request
-        Logger.info("Request: " + request);
-        try (Response response = client.newCall(request).execute()) { //try execute
-            return response.body().string();
-        } catch (IOException e) {
+        Logger.info("[Thread "+Thread.currentThread().getId()+"] Request: " + request);
+        while(true) {
+            try (Response response = client.newCall(request).execute()) { //try execute
+                return response.body().string();
+            } catch (IOException e) {
                 Logger.warn("Connectivity problem or timeout, unsure if other side got the request:");
                 Logger.warn(e.getMessage());
-                return null;
+                Logger.warn("Trying again in 5..");
             }
+        }
     }
 }
