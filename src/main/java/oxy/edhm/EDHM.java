@@ -10,10 +10,10 @@ public class EDHM {
 
 //        Logger.info("Starting HMProfile thread:");
         HMAPI.token = "<>";
-        HMAPI api = new HMAPI();
+//        System.out.println(System.currentTimeMillis()/1000);
 
-//        APIHandler.request("GET_TOKEN");
-
-
+//        HMAPI.request("ACCOUNT_DATA");
+//        HMAPI.request("CHATS");
+        HMAPI.request("SEND", "0000", "test");
     }
 }
