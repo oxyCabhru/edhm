@@ -22,7 +22,7 @@ public class CHATS implements Runnable{
         if (hmUser==null || token==null) {
             synchronized (this){
                 Logger.warn("No user|token detected, calling and waiting on ACCOUNT_DATA..");
-                request("ACCOUNT_DATA");
+                request(Requests.ACCOUNT_DATA);
                 try {
                     wait(2000);
                 } catch (InterruptedException ignored) {}
@@ -41,8 +41,10 @@ public class CHATS implements Runnable{
         List<Map> a = (List) ((Map) gson.fromJson(response, Map.class).get("chats")).get(hmUser);
         chats = new ArrayList<>();
         chats.addAll(a);
-        Logger.info("Chats msgs number: "+chats.size());
-        Logger.info("first message: "+chats.get(0));
+        if (chats.size()!=0) {
+            Logger.info("Chats msgs number: " + chats.size());
+            Logger.info("first message: " + chats.get(0));
+        }
 
 //                "id": "627e92edef354e571c88808a",
 //                "t": 1652462317.062,

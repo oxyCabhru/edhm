@@ -26,30 +26,32 @@ public class HMAPI {
     public static volatile ArrayList<Map> chats;                                                                               // this is where we hold info
     protected static ScheduledThreadPoolExecutor profileUpdater = (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(5); //manage our tasks with this
 
-    public static void request(String request) {
+    public static void request(Requests request) { //helper method for requesting
         switch (request) {
-            case "GET_TOKEN":
+            case GET_TOKEN:
                 profileUpdater.execute(new GET_TOKEN());
                 break;
 
-            case "ACCOUNT_DATA":
+            case ACCOUNT_DATA:
                 Logger.info("Starting ACCOUNT_DATA service");
                 profileUpdater.scheduleWithFixedDelay(new ACCOUNT_DATA(), 0, 10, TimeUnit.SECONDS);
-                break;
-            case "CHATS":
+                break; //start updating account data every 10 seconds
+
+            case CHATS:
                 Logger.info("Starting CHATS service");
                 profileUpdater.scheduleWithFixedDelay(new CHATS(), 0, 10, TimeUnit.SECONDS);
-                break;
+                break; //start updating chats every 10 seconds
+
             default:
                 Logger.warn("Invalid/Unhandled request to API, did you use SEND or TELL? Add channel|target and a message.");
         }
     }
-    public static void request(String sendOrTell, String channelOrTarget, String message) {
+    public static void request(Requests sendOrTell, String channelOrTarget, String message) {
         switch (sendOrTell) {
-            case "SEND":
+            case SEND:
                 profileUpdater.execute(new SEND(channelOrTarget, message));
                 break;
-            case "TELL":
+            case TELL:
                 profileUpdater.execute(new TELL(channelOrTarget, message));
                 break;
             default:
@@ -57,7 +59,7 @@ public class HMAPI {
         }
     }
 
-    public void stopService() {
+    public static void stopServices() {
         profileUpdater.shutdown();
     }
 

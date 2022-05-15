@@ -14,7 +14,7 @@ public class GET_TOKEN implements Runnable{
     @SuppressWarnings("unchecked")
     public void run(){
         Logger.info("GET_TOKEN active:");
-        synchronized (this) {
+        synchronized (this) { //synchronize so we can notify whoever called us
             String response = POST(hackmudURL + "get_token.json",
                     String.format("""
                             {

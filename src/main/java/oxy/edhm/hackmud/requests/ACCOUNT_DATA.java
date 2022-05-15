@@ -23,7 +23,7 @@ public class ACCOUNT_DATA implements Runnable {
         if (token == null) {
             synchronized (this) {
                 Logger.warn("Token was not found. Calling and waiting for GET_TOKEN to do its job..");
-                request("GET_TOKEN");
+                request(Requests.GET_TOKEN);
                 try {
                     wait(2000);
                 } catch (InterruptedException ignored) {
@@ -41,7 +41,7 @@ public class ACCOUNT_DATA implements Runnable {
             Map<String, Object> usersAndChannels = (Map<String, Object>)
                     gson.fromJson(response, Map.class).get("users");
             for (String user : usersAndChannels.keySet()) {
-                if (user.startsWith("cmdr")) {
+                if (user.startsWith("oxy")) {
                     HMAPI.hmUser = user;
                     HMAPI.channelsAndMembers = (Map<String, ArrayList<String>>) gson.fromJson
                             (usersAndChannels.get(user).toString(), Map.class);
